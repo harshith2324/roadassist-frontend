@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 import { getNearbyMechanics, searchParts, getMyVehicles, createRequest } from "../api/endpoints";
 import { Card, Spinner, StatusBadge } from "../components/UI";
-import { MapPin, Search as SearchIcon, Star, Wrench, Package, Navigation } from "lucide-react";
+import { MapPin, Search as SearchIcon, Star, Wrench, Navigation } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -14,30 +14,35 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-const HYD_CENTER = [17.385, 78.4867];
+// Hardcoded to Hyderabad — never changes
+const HYD_LAT = 17.385;
+const HYD_LNG = 78.4867;
 
 export default function Search() {
-  const [tab, setTab] = useState("mechanics"); // "mechanics" | "parts"
-  const [location, setLocation] = useState({ lat: HYD_CENTER[0], lng: HYD_CENTER[1] });
+  const [tab, setTab] = useState("mechanics");
+  const [location] = useState({ lat: HYD_LAT, lng: HYD_LNG });
   const [radius, setRadius] = useState(10);
   const [mechanics, setMechanics] = useState([]);
   const [parts, setParts]         = useState([]);
   const [partQuery, setPartQuery] = useState("");
   const [loading, setLoading]     = useState(false);
-  const [selected, setSelected]   = useState(null); // selected mechanic
+  const [selected, setSelected]   = useState(null);
   const [showRequest, setShowRequest] = useState(false);
 
-
-
-  // Auto-search mechanics when location/radius changes
+  // Auto-search mechanics when radius changes
   useEffect(() => {
     fetchMechanics();
-  }, [location, radius]);
+  }, [radius]);
+
+  // Also search on first load
+  useEffect(() => {
+    fetchMechanics();
+  }, []);
 
   const fetchMechanics = async () => {
     setLoading(true);
     try {
-      const res = await getNearbyMechanics({ lat: location.lat, lng: location.lng, radius_km: radius });
+      const res = await getNearbyMechanics({ lat: HYD_LAT, lng: HYD_LNG, radius_km: radius });
       setMechanics(res.data);
     } catch (e) {
       console.error(e);
@@ -50,7 +55,7 @@ export default function Search() {
     if (!partQuery.trim()) return;
     setLoading(true);
     try {
-      const res = await searchParts({ name: partQuery, lat: location.lat, lng: location.lng, radius_km: radius });
+      const res = await searchParts({ name: partQuery, lat: HYD_LAT, lng: HYD_LNG, radius_km: radius });
       setParts(res.data);
     } catch (e) {
       console.error(e);
@@ -90,7 +95,7 @@ export default function Search() {
           <Card className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Navigation size={15} className="text-brand-500" />
-              <span>Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}</span>
+              <span>📍 Hyderabad, Telangana, India</span>
             </div>
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Radius: {radius} km</label>
@@ -148,18 +153,18 @@ export default function Search() {
 
         {/* Right: Map */}
         <div className="h-[540px] rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-          <MapContainer center={[location.lat, location.lng]} zoom={12} style={{ height: "100%", width: "100%" }}>
+          <MapContainer center={[HYD_LAT, HYD_LNG]} zoom={12} style={{ height: "100%", width: "100%" }}>
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; OpenStreetMap contributors'
             />
-            {/* User location */}
-            <Marker position={[location.lat, location.lng]}>
-              <Popup>Your location</Popup>
+            {/* Hyderabad centre marker */}
+            <Marker position={[HYD_LAT, HYD_LNG]}>
+              <Popup>Hyderabad, Telangana</Popup>
             </Marker>
             {/* Search radius circle */}
             <Circle
-              center={[location.lat, location.lng]}
+              center={[HYD_LAT, HYD_LNG]}
               radius={radius * 1000}
               pathOptions={{ color: "#ea580c", fillOpacity: 0.05, weight: 1.5 }}
             />
@@ -168,8 +173,8 @@ export default function Search() {
               <Marker
                 key={m.mechanic_id}
                 position={[
-                  location.lat + (Math.random() * 0.1 - 0.05),
-                  location.lng + (Math.random() * 0.1 - 0.05),
+                  HYD_LAT + (Math.random() * 0.1 - 0.05),
+                  HYD_LNG + (Math.random() * 0.1 - 0.05),
                 ]}
               >
                 <Popup>
