@@ -27,10 +27,7 @@ export default function Search() {
   const [selected, setSelected]   = useState(null); // selected mechanic
   const [showRequest, setShowRequest] = useState(false);
 
-// Default to Hyderabad centre
-  useEffect(() => {
-    setLocation({ lat: HYD_CENTER[0], lng: HYD_CENTER[1] });
-  }, []);
+
 
   // Auto-search mechanics when location/radius changes
   useEffect(() => {
